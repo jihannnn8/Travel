@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/booking_service.dart';
 import '../models/user.dart';
-import 'order_history_page.dart';
+import '../models/booking.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -17,11 +18,14 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _loadUser();
+    _loadUserAndStats();
   }
 
-  Future<void> _loadUser() async {
+  Future<void> _loadUserAndStats() async {
     final user = await AuthService.getCurrentUser();
+
+    if (!mounted) return;
+
     setState(() {
       _currentUser = user;
       _isLoading = false;
@@ -146,53 +150,12 @@ class _ProfilePageState extends State<ProfilePage> {
           
           const SizedBox(height: 24),
           
-          // Profile Stats
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  'Pesanan',
-                  '0',
-                  Icons.shopping_bag,
-                  Colors.blue,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  'Rating',
-                  '4.8',
-                  Icons.star,
-                  Colors.amber,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  'Poin',
-                  '120',
-                  Icons.card_giftcard,
-                  Colors.green,
-                ),
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 24),
-          
           // Profile Actions
           _buildActionCard(
             'Edit Profil',
             'Ubah data pribadi Anda',
             Icons.edit,
             () => _editProfile(),
-          ),
-          
-          _buildActionCard(
-            'Riwayat Pesanan',
-            'Lihat semua pesanan Anda',
-            Icons.history,
-            () => _viewOrderHistory(),
           ),
           
           _buildActionCard(
@@ -240,45 +203,12 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
   Widget _buildActionCard(String title, String subtitle, IconData icon, VoidCallback onTap) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 16),
       child: Card(
         elevation: 2,
         shape: RoundedRectangleBorder(
@@ -319,23 +249,82 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       builder: (context) => _EditProfileDialog(
         user: _currentUser!,
-        onSave: (updatedUser) {
-          setState(() {
-            _currentUser = updatedUser;
-          });
+        onSave: (updatedUser) async {
+          // Update profile via API ke database
+          await _updateProfileToDatabase(updatedUser);
         },
       ),
     );
   }
 
-  void _viewOrderHistory() {
-    // Navigate to order history page
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const OrderHistoryPage(),
+  Future<void> _updateProfileToDatabase(User updatedUser) async {
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
       ),
     );
+
+    try {
+      // Update profile via API
+      final error = await AuthService.updateProfile(
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phoneNumber: updatedUser.phoneNumber,
+      );
+
+      // Close loading indicator
+      if (mounted) {
+        Navigator.pop(context);
+      }
+
+      if (error == null) {
+        // Success - fetch updated user dari API
+        final refreshedUser = await AuthService.fetchProfile();
+        
+        if (mounted) {
+          setState(() {
+            _currentUser = refreshedUser ?? updatedUser;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profil berhasil diperbarui'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        // Error
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Gagal memperbarui profil: $error'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Close loading indicator
+      if (mounted) {
+        Navigator.pop(context);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Terjadi kesalahan: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   void _openSettings() {
@@ -366,7 +355,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
 class _EditProfileDialog extends StatefulWidget {
   final User user;
-  final Function(User) onSave;
+  final Future<void> Function(User) onSave;
 
   const _EditProfileDialog({
     required this.user,
@@ -468,7 +457,7 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
     );
   }
 
-  void _saveProfile() {
+  Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       final updatedUser = widget.user.copyWith(
         name: _nameController.text.trim(),
@@ -476,15 +465,11 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
         phoneNumber: _phoneController.text.trim(),
       );
       
-      widget.onSave(updatedUser);
+      // Close dialog first
       Navigator.pop(context);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profil berhasil diperbarui'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      // Call onSave callback yang akan update ke database
+      await widget.onSave(updatedUser);
     }
   }
 }

@@ -42,18 +42,23 @@ class TourPackage {
   }
 
   factory TourPackage.fromJson(Map<String, dynamic> json) {
+    // Handle both camelCase and snake_case field names
+    final imageUrl = json['imageUrl'] ?? json['image_url'] ?? json['image'] ?? '';
+    
     return TourPackage(
-      id: json['id'],
-      title: json['title'],
-      description: json['description'],
-      imageUrl: json['imageUrl'],
-      price: json['price'].toDouble(),
-      duration: json['duration'],
-      departureDate: json['departureDate'],
-      rating: json['rating'].toDouble(),
-      totalRatings: json['totalRatings'],
-      rundown: List<String>.from(json['rundown']),
-      destination: json['destination'],
+      id: json['id']?.toString() ?? '',
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      imageUrl: imageUrl,
+      price: (json['price'] is num) ? json['price'].toDouble() : double.tryParse(json['price']?.toString() ?? '0') ?? 0.0,
+      duration: json['duration'] ?? '',
+      departureDate: json['departureDate'] ?? json['departure_date'] ?? '',
+      rating: (json['rating'] is num) ? json['rating'].toDouble() : double.tryParse(json['rating']?.toString() ?? '0') ?? 0.0,
+      totalRatings: json['totalRatings'] ?? json['total_ratings'] ?? 0,
+      rundown: json['rundown'] != null 
+          ? List<String>.from(json['rundown']) 
+          : (json['rundown_list'] != null ? List<String>.from(json['rundown_list']) : []),
+      destination: json['destination'] ?? '',
     );
   }
 }

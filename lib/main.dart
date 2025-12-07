@@ -61,10 +61,17 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   Future<void> _checkAuthStatus() async {
     final isLoggedIn = await AuthService.isLoggedIn();
-    setState(() {
-      _isLoggedIn = isLoggedIn;
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoggedIn = isLoggedIn;
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Method untuk refresh auth status (dipanggil setelah login)
+  void refreshAuthStatus() {
+    _checkAuthStatus();
   }
 
   @override

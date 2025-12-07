@@ -33,34 +33,50 @@ class _RegisterPageState extends State<RegisterPage> {
         _isLoading = true;
       });
 
-      final success = await AuthService.register(
-        _nameController.text.trim(),
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
+      try {
+        final errorMessage = await AuthService.register(
+          _nameController.text.trim(),
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        );
 
-      setState(() {
-        _isLoading = false;
-      });
+        setState(() {
+          _isLoading = false;
+        });
 
-      if (success) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Pendaftaran berhasil! Silakan login.'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginPage()),
-          );
+        if (errorMessage == null) {
+          // Success
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Pendaftaran berhasil! Silakan login.'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+            );
+          }
+        } else {
+          // Error
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(errorMessage),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         }
-      } else {
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Pendaftaran gagal. Periksa kembali data yang dimasukkan.'),
+            SnackBar(
+              content: Text('Kesalahan koneksi: ${e.toString()}'),
               backgroundColor: Colors.red,
             ),
           );
@@ -90,7 +106,7 @@ class _RegisterPageState extends State<RegisterPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 20),
-                
+
                 // Logo Section
                 Center(
                   child: Container(
@@ -103,7 +119,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(40),
                       child: Image.asset(
-                        'assets/images/Logo.jpg',
+                        'assets/images/Logo.png',
                         width: 80,
                         height: 80,
                         fit: BoxFit.cover,
@@ -112,7 +128,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Header
                 Text(
                   'Daftar Akun',
@@ -123,7 +139,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                
+
                 Text(
                   'Buat akun baru untuk memulai perjalanan Anda',
                   style: GoogleFonts.poppins(
@@ -132,7 +148,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ),
                 const SizedBox(height: 40),
-                
+
                 // Name Field
                 TextFormField(
                   controller: _nameController,
@@ -145,7 +161,10 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.blue.shade600, width: 2),
+                      borderSide: BorderSide(
+                        color: Colors.blue.shade600,
+                        width: 2,
+                      ),
                     ),
                   ),
                   validator: (value) {
@@ -156,7 +175,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   },
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Email Field
                 TextFormField(
                   controller: _emailController,
@@ -170,7 +189,10 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.blue.shade600, width: 2),
+                      borderSide: BorderSide(
+                        color: Colors.blue.shade600,
+                        width: 2,
+                      ),
                     ),
                   ),
                   validator: (value) {
@@ -184,7 +206,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   },
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Password Field
                 TextFormField(
                   controller: _passwordController,
@@ -198,7 +220,10 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.blue.shade600, width: 2),
+                      borderSide: BorderSide(
+                        color: Colors.blue.shade600,
+                        width: 2,
+                      ),
                     ),
                   ),
                   validator: (value) {
@@ -212,7 +237,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   },
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Confirm Password Field
                 TextFormField(
                   controller: _confirmPasswordController,
@@ -220,13 +245,19 @@ class _RegisterPageState extends State<RegisterPage> {
                   decoration: InputDecoration(
                     labelText: 'Konfirmasi Password',
                     hintText: 'Ulangi password Anda',
-                    prefixIcon: Icon(Icons.lock_outline, color: Colors.blue.shade600),
+                    prefixIcon: Icon(
+                      Icons.lock_outline,
+                      color: Colors.blue.shade600,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.blue.shade600, width: 2),
+                      borderSide: BorderSide(
+                        color: Colors.blue.shade600,
+                        width: 2,
+                      ),
                     ),
                   ),
                   validator: (value) {
@@ -240,7 +271,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   },
                 ),
                 const SizedBox(height: 40),
-                
+
                 // Register Button
                 SizedBox(
                   width: double.infinity,
@@ -254,26 +285,31 @@ class _RegisterPageState extends State<RegisterPage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Text(
-                            'Daftar',
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                    child:
+                        _isLoading
+                            ? const CircularProgressIndicator(
+                              color: Colors.white,
+                            )
+                            : Text(
+                              'Daftar',
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Login Link
                 Center(
                   child: TextButton(
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const LoginPage()),
+                        MaterialPageRoute(
+                          builder: (context) => const LoginPage(),
+                        ),
                       );
                     },
                     child: Text(

@@ -43,3 +43,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Documentation
+# Uncomment line below jika ingin meng-ignore seluruh folder dokumentasi
+# /DOKUMENTASI/
+# Atau ignore file-file tertentu di dalam folder dokumentasi:
+DOKUMENTASI/*.tmp
+DOKUMENTASI/*.bak
+DOKUMENTASI/*.swp
+DOKUMENTASI/.DS_Store
+DOKUMENTASI/*~

@@ -1,138 +1,12 @@
+import 'dart:convert';
 import '../models/tour_package.dart';
 import '../models/city.dart';
+import 'api_service.dart';
+import '../config/api_config.dart';
+import 'destination_service.dart';
 
 class DataService {
-  static List<TourPackage> getTourPackages() {
-    return [
-      TourPackage(
-        id: '1',
-        title: 'Pantai Lombok',
-        description: 'Nikmati keindahan pantai Lombok dengan pemandangan yang menakjubkan',
-        imageUrl: 'assets/images/lombok.jpg',
-        price: 1000000,
-        duration: '2 Hari 3 Malam',
-        departureDate: '15 Januari 2024',
-        rating: 4.8,
-        totalRatings: 120,
-        destination: 'Lombok, NTB',
-        rundown: [
-          'Hari 1: Kedatangan di Lombok, check-in hotel',
-          'Hari 2: Tour ke Pantai Kuta, Pantai Tanjung Aan',
-          'Hari 3: Tour ke Gili Trawangan, snorkeling',
-          'Hari 4: Free time, check-out hotel'
-        ],
-      ),
-      TourPackage(
-        id: '2',
-        title: 'Yogyakarta Heritage',
-        description: 'Jelajahi warisan budaya Yogyakarta yang kaya akan sejarah',
-        imageUrl: 'assets/images/yogyakarta.jpg',
-        price: 750000,
-        duration: '3 Hari 2 Malam',
-        departureDate: '20 Januari 2024',
-        rating: 4.6,
-        totalRatings: 95,
-        destination: 'Yogyakarta',
-        rundown: [
-          'Hari 1: Kedatangan di Yogyakarta, city tour',
-          'Hari 2: Candi Borobudur, Candi Prambanan',
-          'Hari 3: Malioboro, Keraton Yogyakarta'
-        ],
-      ),
-      TourPackage(
-        id: '3',
-        title: 'Bali Adventure',
-        description: 'Petualangan seru di Pulau Dewata dengan berbagai aktivitas menarik',
-        imageUrl: 'assets/images/bali.jpg',
-        price: 1200000,
-        duration: '4 Hari 3 Malam',
-        departureDate: '25 Januari 2024',
-        rating: 4.9,
-        totalRatings: 150,
-        destination: 'Bali',
-        rundown: [
-          'Hari 1: Kedatangan di Bali, check-in hotel',
-          'Hari 2: Tanah Lot, Uluwatu Temple',
-          'Hari 3: Ubud, Tegallalang Rice Terrace',
-          'Hari 4: Water sports, free time'
-        ],
-      ),
-      TourPackage(
-        id: '4',
-        title: 'Raja Ampat Paradise',
-        description: 'Surga bawah laut terbaik di dunia dengan keindahan yang memukau',
-        imageUrl: 'assets/images/raja_ampat.jpg',
-        price: 2500000,
-        duration: '5 Hari 4 Malam',
-        departureDate: '30 Januari 2024',
-        rating: 4.7,
-        totalRatings: 80,
-        destination: 'Raja Ampat, Papua',
-        rundown: [
-          'Hari 1: Kedatangan di Sorong, transfer ke Waisai',
-          'Hari 2: Snorkeling di Wayag',
-          'Hari 3: Diving di Cape Kri',
-          'Hari 4: Island hopping',
-          'Hari 5: Free time, departure'
-        ],
-      ),
-      TourPackage(
-        id: '5',
-        title: 'Bromo Tengger',
-        description: 'Menyaksikan matahari terbit dari Gunung Bromo yang legendaris',
-        imageUrl: 'assets/images/bromo.jpg',
-        price: 600000,
-        duration: '2 Hari 1 Malam',
-        departureDate: '5 Februari 2024',
-        rating: 4.5,
-        totalRatings: 200,
-        destination: 'Bromo, Jawa Timur',
-        rundown: [
-          'Hari 1: Kedatangan di Probolinggo, transfer ke Bromo',
-          'Hari 2: Sunrise di Penanjakan, kawah Bromo'
-        ],
-      ),
-    ];
-  }
-
-  static List<City> getCities() {
-    return [
-      City(
-        id: '1',
-        name: 'D.I.Y Yogyakarta',
-        imageUrl: 'assets/images/yogyakarta_icon.jpg',
-      ),
-      City(
-        id: '2',
-        name: 'Bali',
-        imageUrl: 'assets/images/bali_icon.jpg',
-      ),
-      City(
-        id: '3',
-        name: 'Lombok',
-        imageUrl: 'assets/images/lombok_icon.jpg',
-      ),
-      City(
-        id: '4',
-        name: 'Bromo',
-        imageUrl: 'assets/images/bromo_icon.jpg',
-      ),
-      City(
-        id: '5',
-        name: 'Raja Ampat',
-        imageUrl: 'assets/images/raja_ampat_icon.jpg',
-      ),
-    ];
-  }
-
-  static List<String> getSliderImages() {
-    return [
-      'assets/images/Bromo.jpg',
-      'assets/images/Kuta.jpg',
-      'assets/images/Yogya.jpg',
-    ];
-  }
-
+  // Static data untuk pickup times (masih digunakan di package_detail_page)
   static List<String> getPickupTimes() {
     return [
       '06:00 WIB',
@@ -143,13 +17,144 @@ class DataService {
     ];
   }
 
-  static List<String> getPaymentMethods() {
-    return [
-      'Transfer Bank',
-      'E-Wallet (GoPay)',
-      'E-Wallet (OVO)',
-      'E-Wallet (DANA)',
-      'Credit Card',
-    ];
+  // ========== ASYNC API METHODS ==========
+  
+  /// Get tour packages from API (async)
+  static Future<List<TourPackage>> getTourPackagesAsync() async {
+    try {
+      final packages = await DestinationService.getDestinations();
+      if (packages != null && packages.isNotEmpty) {
+        return packages;
+      }
+      // Return empty list if API returns null or empty
+      print('No tour packages found from API');
+      return [];
+    } catch (e) {
+      print('Error fetching tour packages: $e');
+      // Return empty list if API fails
+      return [];
+    }
+  }
+
+  /// Get cities from API (async)
+  static Future<List<City>> getCitiesAsync() async {
+  try {
+    final response = await ApiService.get(ApiConfig.cities);
+    
+    print('Cities API Response Status: ${response.statusCode}');
+    
+    if (response.statusCode == 200) {
+      final responseData = json.decode(response.body);
+      print('Cities API Response Body: $responseData');
+      
+      if (responseData['success'] == true) {
+        final citiesData = responseData['data']['cities'] as List?;
+        
+        if (citiesData != null && citiesData.isNotEmpty) {
+          print('Found ${citiesData.length} cities');
+          
+          return citiesData.map((city) {
+            // Get image URL dari response
+            final imageUrl = city['imageUrl'] ?? city['image_url'] ?? '';
+            
+            // Fix image URL menggunakan ApiConfig.fixImageUrl
+            final fixedImageUrl = ApiConfig.fixImageUrl(imageUrl);
+            
+            print('City: ${city['name']}, Original: $imageUrl, Fixed: $fixedImageUrl');
+            
+            return City(
+              id: city['id']?.toString() ?? '',
+              name: city['name'] ?? '',
+              imageUrl: fixedImageUrl,
+            );
+          }).toList();
+        } else {
+          print('Cities data is empty or null');
+        }
+      } else {
+        print('API success flag is false');
+      }
+    } else {
+      print('API returned non-200 status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+    }
+    
+    // Return empty list if API fails
+    print('No cities found from API');
+    return [];
+    
+  } catch (e, stackTrace) {
+    print('Error fetching cities: $e');
+    print('Stack trace: $stackTrace');
+    // Return empty list if API fails
+    return [];
+  }
+}
+
+  /// Get slider images from API (async)
+  static Future<List<String>> getSliderImagesAsync() async {
+    try {
+      final response = await ApiService.get(ApiConfig.sliders);
+      
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        
+        if (responseData['success'] == true) {
+          final slidersData = responseData['data']['sliders'] as List?;
+          if (slidersData != null && slidersData.isNotEmpty) {
+            return slidersData.map((imageUrl) {
+              // Backend mengembalikan array of strings langsung
+              final url = imageUrl is String ? imageUrl : (imageUrl.toString());
+              // Fix image URL - handle semua format (http, /api/asset/, /api/storage/, assets/)
+              if (url.startsWith('assets/')) {
+                return url; // Asset images tidak perlu di-fix
+              }
+              // Gunakan fixImageUrl untuk semua URL lainnya (termasuk /api/asset/ dan /api/storage/)
+              return ApiConfig.fixImageUrl(url);
+            }).toList();
+          }
+        }
+      }
+      // Return empty list if API fails
+      print('No slider images found from API');
+      return [];
+    } catch (e) {
+      print('Error fetching slider images: $e');
+      // Return empty list if API fails
+      return [];
+    }
+  }
+
+  /// Get promo images from API (async)
+  static Future<List<String>> getPromoImagesAsync() async {
+    try {
+      final response = await ApiService.get(ApiConfig.promos);
+      
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        
+        if (responseData['success'] == true) {
+          final promosData = responseData['data']['promos'] as List?;
+          if (promosData != null && promosData.isNotEmpty) {
+            return promosData.map((imageUrl) {
+              // Backend mengembalikan array of strings langsung
+              final url = imageUrl is String ? imageUrl : (imageUrl.toString());
+              // Fix image URL - handle semua format (http, /api/asset/, /api/storage/, assets/)
+              if (url.startsWith('assets/')) {
+                return url; // Asset images tidak perlu di-fix
+              }
+              // Gunakan fixImageUrl untuk semua URL lainnya (termasuk /api/asset/ dan /api/storage/)
+              return ApiConfig.fixImageUrl(url);
+            }).toList();
+          }
+        }
+      }
+      // Return empty list if API fails (promos are optional)
+      return [];
+    } catch (e) {
+      print('Error fetching promo images: $e');
+      // Return empty list if error
+      return [];
+    }
   }
 }

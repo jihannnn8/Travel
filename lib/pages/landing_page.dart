@@ -27,7 +27,7 @@ class LandingPage extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(60),
                   child: Image.asset(
-                    'assets/images/Logo.jpg',
+                    'assets/images/Logo.png',
                     width: 120,
                     height: 120,
                     fit: BoxFit.cover,

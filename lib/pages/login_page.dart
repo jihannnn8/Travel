@@ -30,27 +30,59 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = true;
       });
 
-      final success = await AuthService.login(
-        _nameController.text.trim(),
-        _passwordController.text.trim(),
-      );
+      try {
+        final success = await AuthService.login(
+          _nameController.text.trim(),
+          _passwordController.text.trim(),
+        );
 
-      setState(() {
-        _isLoading = false;
-      });
+        setState(() {
+          _isLoading = false;
+        });
 
-      if (success) {
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomePage()),
-          );
+        if (success) {
+          if (mounted) {
+            // Verify login status before navigating
+            final isLoggedIn = await AuthService.isLoggedIn();
+            print('Login success, isLoggedIn: $isLoggedIn');
+            
+            if (isLoggedIn) {
+              // Always navigate to home and remove all previous routes
+              // This ensures AuthWrapper will show HomePage
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const HomePage()),
+                (route) => false, // Remove all previous routes including landing page
+              );
+            } else {
+              // Login successful but isLoggedIn returns false - show error
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Login berhasil, tapi terjadi kesalahan. Silakan coba lagi.'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            }
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Login gagal. Periksa kembali nama dan password.',
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         }
-      } else {
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Login gagal. Periksa kembali nama dan password.'),
+            SnackBar(
+              content: Text('Kesalahan koneksi: ${e.toString()}'),
               backgroundColor: Colors.red,
             ),
           );
@@ -80,7 +112,7 @@ class _LoginPageState extends State<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 20),
-                
+
                 // Logo Section
                 Center(
                   child: Container(
@@ -93,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(40),
                       child: Image.asset(
-                        'assets/images/Logo.jpg',
+                        'assets/images/Logo.png',
                         width: 80,
                         height: 80,
                         fit: BoxFit.cover,
@@ -102,7 +134,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Header
                 Text(
                   'Masuk',
@@ -113,7 +145,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                
+
                 Text(
                   'Selamat datang kembali!',
                   style: GoogleFonts.poppins(
@@ -122,7 +154,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 40),
-                
+
                 // Name Field
                 TextFormField(
                   controller: _nameController,
@@ -135,7 +167,10 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.blue.shade600, width: 2),
+                      borderSide: BorderSide(
+                        color: Colors.blue.shade600,
+                        width: 2,
+                      ),
                     ),
                   ),
                   validator: (value) {
@@ -146,7 +181,7 @@ class _LoginPageState extends State<LoginPage> {
                   },
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Password Field
                 TextFormField(
                   controller: _passwordController,
@@ -160,7 +195,10 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.blue.shade600, width: 2),
+                      borderSide: BorderSide(
+                        color: Colors.blue.shade600,
+                        width: 2,
+                      ),
                     ),
                   ),
                   validator: (value) {
@@ -171,7 +209,7 @@ class _LoginPageState extends State<LoginPage> {
                   },
                 ),
                 const SizedBox(height: 40),
-                
+
                 // Login Button
                 SizedBox(
                   width: double.infinity,
@@ -185,26 +223,31 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Text(
-                            'Masuk',
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                    child:
+                        _isLoading
+                            ? const CircularProgressIndicator(
+                              color: Colors.white,
+                            )
+                            : Text(
+                              'Masuk',
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Register Link
                 Center(
                   child: TextButton(
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const RegisterPage()),
+                        MaterialPageRoute(
+                          builder: (context) => const RegisterPage(),
+                        ),
                       );
                     },
                     child: Text(

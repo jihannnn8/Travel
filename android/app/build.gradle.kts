@@ -8,7 +8,8 @@ plugins {
 android {
     namespace = "com.example.tour1"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Use highest required NDK version to satisfy all plugins
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
